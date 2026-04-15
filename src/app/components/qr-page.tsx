@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "./auth-context";
 import { useNavigate } from "react-router";
 import { QRCodeSVG } from "qrcode.react";
@@ -25,13 +25,13 @@ export function QrPage() {
 
   if (!user) return null;
 
-  const qrData = JSON.stringify({
+  const qrData = useMemo(() => JSON.stringify({
     id: user.id,
     name: user.name,
     role: user.role,
     token,
-    timestamp: Date.now(),
-  });
+    timestamp: token,
+  }), [token, user]);
 
   const regenerate = () => {
     setToken(Date.now().toString(36));
