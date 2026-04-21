@@ -2,20 +2,38 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Search, ScanLine } from "lucide-react";
 
-const directory = [
-  { id: "182634", name: "Melissa Hernandez", role: "Estudiante", carrera: "Lic. Negocios Internacionales", photo: "https://images.unsplash.com/photo-1597169012417-3fb4c7cd8c20?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200", status: "activo" },
-  { id: "300100", name: "Carlos Martinez", role: "Seguridad", carrera: undefined, photo: "https://images.unsplash.com/photo-1775740865980-9cdb0b0c71f3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200", status: "activo" },
-  { id: "500200", name: "Laura Sanchez", role: "Empleado", carrera: undefined, photo: "https://images.unsplash.com/photo-1597169012417-3fb4c7cd8c20?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200", status: "activo" },
-  { id: "400562", name: "Denisse Cuevas", role: "Administrador", carrera: undefined, photo: "https://images.unsplash.com/photo-1687901733216-8125002ff4be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200", status: "activo" },
-];
+interface Person {
+  id: string;
+  name: string;
+  role: string;
+  career?: string;
+  is_enrolled: boolean;
+}
 
 export function IdentifyPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Person[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const results = query.length > 0
-    ? directory.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()) || p.id.includes(query))
-    : [];
+  const handleSearch = async (text: string) => {
+    setQuery(text);
+    if (text.length < 2) {
+      setResults([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/search?query=${text}`);
+      const data = await response.json();
+      setResults(data);
+    } catch (error) {
+      console.error('Error buscando:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f1f1f1]">
@@ -33,7 +51,7 @@ export function IdentifyPage() {
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             placeholder="Buscar por nombre o ID..."
             className="flex-1 bg-transparent outline-none font-['DM_Serif_Text',serif] text-[14px] text-black placeholder-[#737373]"
           />
@@ -49,10 +67,16 @@ export function IdentifyPage() {
 
         {/* Results */}
         <div className="space-y-3">
-          {results.map((person) => (
+          {loading && (
+            <p className="text-center text-[#737373] font-['DM_Serif_Text',serif] text-[14px] mt-8">Buscando...</p>
+          )}
+
+          {!loading && results.map((person) => (
             <div key={person.id} className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#ec5b13] shrink-0">
-                <img src={person.photo} alt="" className="w-full h-full object-cover" />
+              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#ec5b13] shrink-0 bg-[#f1f1f1] flex items-center justify-center">
+                <span className="text-[#ec5b13] font-bold text-[20px]">
+                  {person.name.charAt(0)}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-['DM_Serif_Text',serif] text-[16px] text-black truncate">{person.name}</p>
@@ -60,20 +84,22 @@ export function IdentifyPage() {
                 <div className="flex items-center gap-2 mt-1">
                   <span className="bg-[#ec5b13] text-white text-[10px] px-2 py-0.5 rounded-full font-['DM_Serif_Text',serif]">{person.role}</span>
                   <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    <span className="text-[10px] text-[#737373]">{person.status}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full ${person.is_enrolled ? 'bg-green-500' : 'bg-red-400'}`} />
+                    <span className="text-[10px] text-[#737373]">{person.is_enrolled ? 'Inscrito' : 'No inscrito'}</span>
                   </div>
                 </div>
-                {person.carrera && (
-                  <p className="font-['DM_Serif_Text',serif] text-[11px] text-[#737373] mt-0.5">{person.carrera}</p>
+                {person.career && (
+                  <p className="font-['DM_Serif_Text',serif] text-[11px] text-[#737373] mt-0.5">{person.career}</p>
                 )}
               </div>
             </div>
           ))}
-          {query.length > 0 && results.length === 0 && (
+
+          {!loading && query.length >= 2 && results.length === 0 && (
             <p className="text-center text-[#737373] font-['DM_Serif_Text',serif] text-[14px] mt-8">No se encontraron resultados</p>
           )}
-          {query.length === 0 && (
+
+          {query.length < 2 && (
             <p className="text-center text-[#737373] font-['DM_Serif_Text',serif] text-[14px] mt-8">Ingresa un nombre o ID para buscar</p>
           )}
         </div>
