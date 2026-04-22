@@ -18,86 +18,51 @@ export interface UserData {
   activoDesde: number;
 }
 
-const mockUsers: Record<string, { password: string; data: UserData }> = {
-  "182634": {
-    password: "1234",
-    data: {
-      id: "182634",
-      name: "Melissa Hernandez",
-      role: "estudiante",
-      photo: "https://images.unsplash.com/photo-1597169012417-3fb4c7cd8c20?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200",
-      carrera: "Licenciatura en Negocios Internacionales",
-      semestre: 6,
-      beca: "Beca Deportiva",
-      residente: true,
-      colegio: "Colegio Jose Gaos",
-      activo: true,
-      activoDesde: 2022,
-    },
-  },
-  "400562": {
-    password: "1234",
-    data: {
-      id: "400562",
-      name: "Denisse Cuevas",
-      role: "administrador",
-      photo: "https://images.unsplash.com/photo-1687901733216-8125002ff4be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200",
-      departamento: "Area de Deportes",
-      puesto: "Coordinadora",
-      activo: true,
-      activoDesde: 2022,
-    },
-  },
-  "300100": {
-    password: "1234",
-    data: {
-      id: "300100",
-      name: "Carlos Martinez",
-      role: "seguridad",
-      photo: "https://images.unsplash.com/photo-1775740865980-9cdb0b0c71f3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200",
-      departamento: "Seguridad Universitaria",
-      puesto: "Oficial de Seguridad",
-      activo: true,
-      activoDesde: 2020,
-    },
-  },
-  "500200": {
-    password: "1234",
-    data: {
-      id: "500200",
-      name: "Laura Sanchez",
-      role: "empleado",
-      photo: "https://images.unsplash.com/photo-1597169012417-3fb4c7cd8c20?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200",
-      departamento: "Biblioteca",
-      puesto: "Coordinadora de Servicios",
-      activo: true,
-      activoDesde: 2019,
-    },
-  },
-};
-
 interface AuthContextType {
   user: UserData | null;
-  login: (id: string, password: string) => boolean;
+  login: (id: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  login: () => false,
+  login: async () => false,
   logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
 
-  const login = (id: string, password: string) => {
-    const found = mockUsers[id];
-    if (found && found.password === password) {
-      setUser(found.data);
+  const login = async (id: string, password: string): Promise<boolean> => {
+    try {
+      const response = await fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, password }),
+      });
+
+      if (!response.ok) return false;
+
+      const { user: u } = await response.json();
+
+      setUser({
+        id: String(u.id),
+        name: u.full_name,
+        role: u.role,
+        photo: "",
+        carrera: u.career,
+        semestre: u.semester,
+        beca: u.scholarship,
+        residente: u.is_resident === 1,
+        activo: u.is_enrolled === 1,
+        activoDesde: new Date().getFullYear(),
+      });
+
       return true;
+    } catch (error) {
+      console.error("Error en login:", error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => setUser(null);
@@ -111,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => useContext(AuthContext);
 
-// Mock access logs
 export const mockAccessLogs = [
   { id: 1, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "entrada", method: "QR", location: "Puerta Principal", date: "2026-04-15", time: "07:32" },
   { id: 2, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "salida", method: "QR", location: "Puerta Principal", date: "2026-04-15", time: "14:15" },

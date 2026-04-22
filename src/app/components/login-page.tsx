@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "./auth-context";
 import { useNavigate } from "react-router";
-import imgUdlap1 from "figma:asset/94454e9a7e3e91be5322a669fe39012d8be17a6a.png";
+//import imgUdlap1 from "figma:asset/94454e9a7e3e91be5322a669fe39012d8be17a6a.png";
 
 export function LoginPage() {
   const [userId, setUserId] = useState("");
@@ -10,25 +10,22 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (login(userId, password)) {
-      navigate("/home");
-    } else {
-      setError("ID o contrasena incorrectos");
-    }
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  const success = await login(userId, password);
+  if (success) {
+    navigate("/home");
+  } else {
+    setError("ID o contraseña incorrectos");
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#f1f1f1] flex flex-col items-center px-6">
       <p className="font-['Lexend',sans-serif] font-bold text-[#f48a32] text-[20px] tracking-[-0.5px] mt-6">
         UDLAP
       </p>
-
-      <div className="w-48 h-48 mt-4 mb-4">
-        <img src={imgUdlap1} alt="UDLAP Logo" className="w-full h-full object-contain" />
-      </div>
 
       <h1 className="font-['DM_Serif_Text',serif] text-[28px] text-black mb-6">
         Iniciar Sesion
