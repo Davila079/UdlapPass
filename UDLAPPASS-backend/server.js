@@ -95,7 +95,40 @@ app.get('/search', (req, res) => {
     res.json(results);
   });
 });
+// ── REGISTROS DE ACCESO ────────────────────────────
+app.get('/access-logs', (req, res) => {
+  const sql = `
+    SELECT 
+      a.id, a.type, a.method, a.location, a.created_at,
+      u.id AS userId, u.role,
+      COALESCE(s.full_name, e.full_name, ad.full_name) AS name
+    FROM access_logs a
+    JOIN users u ON u.id = a.user_id
+    LEFT JOIN students s ON s.user_id = u.id
+    LEFT JOIN employees e ON e.user_id = u.id
+    LEFT JOIN administrators ad ON ad.user_id = u.id
+    ORDER BY a.created_at DESC
+  `;
 
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Error en el servidor' });
+    res.json(results);
+  });
+});
+
+// ── INSERTAR REGISTRO ──────────────────────────────
+app.post('/access-logs', (req, res) => {
+  const { user_id, type, method, location } = req.body;
+
+  db.query(
+    'INSERT INTO access_logs (user_id, type, method, location) VALUES (?, ?, ?, ?)',
+    [user_id, type, method, location],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: 'Error guardando registro' });
+      res.json({ success: true, id: result.insertId });
+    }
+  );
+});
 // ── INICIAR SERVIDOR ────────────────────────────────
 app.listen(3000, () => {
   console.log('Servidor corriendo en http://localhost:3000');
