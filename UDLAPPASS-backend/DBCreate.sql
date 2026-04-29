@@ -47,11 +47,11 @@ CREATE TABLE access_logs (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 INSERT INTO users (id, email, password_hash, role) VALUES
-  (183112, 'david.medina@universidad.edu',   '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
-  (183913, 'elisa.mendoza@universidad.edu',  '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
-  (2, 'carlos.ruiz@universidad.edu',    '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'empleado'),
-  (1, 'anellisse@universidad.edu',          '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'administrador'),
-   (183604, 'mafer@correo.com',   '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante');
+  (183112, 'david.medina@udlap.mx',   '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
+  (183913, 'elisa.mendoza@udlap.mx',  '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
+  (2, 'carlos.ruiz@udlap.mx',    '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'empleado'),
+  (1, 'anellisse@udlap.mx',          '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'administrador'),
+   (183604, 'mafer@udlap.mx',   '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante');
 
 INSERT INTO students (user_id, full_name, career, semester, scholarship, is_enrolled, is_resident, residence) VALUES
   (183112, 'David Miguel Medina Raymundo', 'Ingeniería en Sistemas Computacionales', 5, 'Académica', TRUE, TRUE,  'Gaos'),
