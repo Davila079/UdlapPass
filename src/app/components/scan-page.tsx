@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, ScanLine, Car, UserCheck, CheckCircle, XCircle } from "lucide-react";
 
@@ -15,6 +15,44 @@ export function ScanPage() {
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<typeof mockScanResults.scan1 | null>(null);
   const [registered, setRegistered] = useState(false);
+
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraOpen(false);
+    if (scanning && !result) setScanning(false);
+  };
+
+  const startCamera = async () => {
+    setCameraError("");
+    setResult(null);
+    setRegistered(false);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      setIsCameraOpen(true);
+      setScanning(true);
+    } catch (err) {
+      console.error("Error al acceder a la cámara:", err);
+      setCameraError("No se pudo acceder a la cámara. Verifica permisos.");
+    }
+  };
+
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
 
   const simulateScan = () => {
     setScanning(true);
@@ -70,29 +108,56 @@ export function ScanPage() {
 
         {/* Scanner area */}
         <div className="bg-black rounded-2xl aspect-square max-w-xs mx-auto flex items-center justify-center relative overflow-hidden">
-          {scanning ? (
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-48 h-48 border-2 border-[#ec5b13] rounded-lg animate-pulse" />
-              <p className="text-white text-sm font-['DM_Serif_Text',serif]">Escaneando...</p>
-              <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-[#ec5b13] animate-bounce" />
-            </div>
-          ) : (
+          <video
+            ref={videoRef}
+            className={`w-full h-full object-cover ${!isCameraOpen ? "hidden" : ""}`}
+            playsInline
+          />
+          
+          {!isCameraOpen && !scanning && (
             <div className="flex flex-col items-center gap-3">
               <ScanLine size={80} className="text-[#ec5b13]/50" />
-              <p className="text-white/60 text-sm font-['DM_Serif_Text',serif]">
+              <p className="text-white/60 text-sm font-['DM_Serif_Text',serif] text-center px-4">
                 {mode === "vehicular" ? "Apunta a la placa/QR vehicular" : "Apunta al codigo QR"}
               </p>
             </div>
           )}
+
+          {isCameraOpen && scanning && (
+            <>
+              <div className="absolute inset-0 border-[3px] border-[#ec5b13]/50 rounded-2xl m-8 pointer-events-none" />
+              <div className="absolute top-1/2 left-8 right-8 h-0.5 bg-[#ec5b13] animate-bounce pointer-events-none shadow-[0_0_8px_2px_rgba(236,91,19,0.5)]" />
+            </>
+          )}
+
+          {!isCameraOpen && scanning && (
+            <div className="flex flex-col items-center gap-3 absolute">
+              <div className="w-48 h-48 border-2 border-[#ec5b13] rounded-lg animate-pulse" />
+              <p className="text-white text-sm font-['DM_Serif_Text',serif]">Escaneando (Simulación)...</p>
+            </div>
+          )}
         </div>
 
-        <button
-          onClick={simulateScan}
-          disabled={scanning}
-          className="w-full max-w-xs mx-auto block mt-4 bg-[#ec5b13] text-white py-3 rounded-full font-['DM_Serif_Text',serif] text-[18px] active:opacity-80 disabled:opacity-50"
-        >
-          {scanning ? "Escaneando..." : "Simular Escaneo"}
-        </button>
+        {cameraError && (
+          <p className="text-red-500 text-sm text-center mt-2 font-['DM_Serif_Text',serif]">{cameraError}</p>
+        )}
+
+        <div className="flex gap-2 max-w-xs mx-auto mt-4">
+          <button
+            onClick={isCameraOpen ? stopCamera : startCamera}
+            className="flex-1 bg-white text-[#ec5b13] border-2 border-[#ec5b13] py-3 rounded-full font-['DM_Serif_Text',serif] text-[15px] active:opacity-80"
+          >
+            {isCameraOpen ? "Detener Cámara" : "Abrir Cámara"}
+          </button>
+          
+          <button
+            onClick={simulateScan}
+            disabled={scanning && !isCameraOpen}
+            className="flex-1 bg-[#ec5b13] text-white py-3 rounded-full font-['DM_Serif_Text',serif] text-[15px] active:opacity-80 disabled:opacity-50"
+          >
+            Simular
+          </button>
+        </div>
 
         {/* Result */}
         {result && (

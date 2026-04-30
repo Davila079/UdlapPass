@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+// 🔥 IMPORTA TUS IMÁGENES
+import user1 from "../../assets/user1.jpg";
+import user2 from "../../assets/user2.jpg";
+import user3 from "../../assets/user3.jpg";
+import user4 from "../../assets/user4.jpg";
+import user5 from "../../assets/user5.jpg";
+import user6 from "../../assets/user6.jpg";
+import user7 from "../../assets/user7.jpg";
+import user8 from "../../assets/user8.jpg";
+import user9 from "../../assets/user9.jpg";
+
 export type UserRole = "estudiante" | "empleado" | "seguridad" | "administrador";
 
 export interface UserData {
@@ -30,6 +41,33 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
+
+// 🔥 MAPA DE FOTOS PARA ESTUDIANTES (TUS 3 USERS)
+const studentPhotos: Record<string, string> = {
+  "183604": user3,
+  "183112": user6,
+  "183913": user8,
+};
+
+
+// 🔥 FUNCIÓN PARA ASIGNAR FOTO
+const getUserPhoto = (id: string, role: string) => {
+  const cleanId = String(id).trim();
+
+  // 👇 estudiantes con ID específico
+  if (role === "estudiante") {
+    return studentPhotos[cleanId] || user4;
+  }
+
+  // 👇 otros roles
+  if (role === "administrador") return user5;
+  if (role === "empleado") return user9;
+  if (role === "seguridad") return user3;
+
+  return user4;
+};
+
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
 
@@ -45,11 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { user: u } = await response.json();
 
+      const userId = String(u.id).trim();
+
       setUser({
-        id: String(u.id),
+        id: userId,
         name: u.full_name,
         role: u.role,
-        photo: "",
+        // 🔥 FOTO CORRECTA SEGÚN ID O ROL
+        photo: getUserPhoto(userId, u.role),
         carrera: u.career,
         semestre: u.semester,
         beca: u.scholarship,
@@ -76,6 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => useContext(AuthContext);
 
+
+// 📊 DATOS MOCK (sin cambios)
 export const mockAccessLogs = [
   { id: 1, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "entrada", method: "QR", location: "Puerta Principal", date: "2026-04-15", time: "07:32" },
   { id: 2, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "salida", method: "QR", location: "Puerta Principal", date: "2026-04-15", time: "14:15" },
