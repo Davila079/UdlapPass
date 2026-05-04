@@ -55,7 +55,7 @@ export function QrPage() {
         </p>
 
         {/* QR Container */}
-        <div className="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center">
+        <div  data-cy="qr-code" className="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center">
           <QRCodeSVG
             value={qrData}
             size={250}

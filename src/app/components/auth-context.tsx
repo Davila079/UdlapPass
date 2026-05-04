@@ -88,12 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: userId,
         name: u.full_name,
         role: u.role,
-        // 🔥 FOTO CORRECTA SEGÚN ID O ROL
         photo: getUserPhoto(userId, u.role),
         carrera: u.career,
         semestre: u.semester,
         beca: u.scholarship,
         residente: u.is_resident === 1,
+        colegio: u.residence,
         activo: u.is_enrolled === 1,
         activoDesde: new Date().getFullYear(),
       });
@@ -116,19 +116,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => useContext(AuthContext);
 
-
-// 📊 DATOS MOCK (sin cambios)
-export const mockAccessLogs = [
-  { id: 1, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "entrada", method: "QR", location: "Puerta Principal", date: "2026-04-15", time: "07:32" },
-  { id: 2, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "salida", method: "QR", location: "Puerta Principal", date: "2026-04-15", time: "14:15" },
-  { id: 3, userId: "500200", name: "Laura Sanchez", role: "empleado", type: "entrada", method: "Credencial", location: "Puerta Vehicular", date: "2026-04-15", time: "06:45" },
-  { id: 4, userId: "300100", name: "Carlos Martinez", role: "seguridad", type: "entrada", method: "QR", location: "Caseta Norte", date: "2026-04-15", time: "06:00" },
-  { id: 5, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "entrada", method: "Vehicular", location: "Puerta Vehicular", date: "2026-04-14", time: "08:10" },
-  { id: 6, userId: "500200", name: "Laura Sanchez", role: "empleado", type: "salida", method: "QR", location: "Puerta Principal", date: "2026-04-14", time: "17:30" },
-  { id: 7, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "entrada", method: "QR", location: "Puerta Principal", date: "2026-04-13", time: "09:00" },
-  { id: 8, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "salida", method: "QR", location: "Puerta Principal", date: "2026-04-13", time: "13:45" },
-  { id: 9, userId: "500200", name: "Laura Sanchez", role: "empleado", type: "entrada", method: "Credencial", location: "Puerta Principal", date: "2026-04-13", time: "07:00" },
-  { id: 10, userId: "300100", name: "Carlos Martinez", role: "seguridad", type: "entrada", method: "QR", location: "Caseta Norte", date: "2026-04-13", time: "06:00" },
-  { id: 11, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "entrada", method: "QR", location: "Puerta Principal", date: "2026-04-12", time: "07:50" },
-  { id: 12, userId: "182634", name: "Melissa Hernandez", role: "estudiante", type: "salida", method: "QR", location: "Puerta Principal", date: "2026-04-12", time: "15:20" },
-];
