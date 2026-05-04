@@ -87,7 +87,7 @@ export function HomePage() {
           </div>
         )}
 
-        {/* Extra info for employees */}
+        {/* Extra info for employees / admins */}
         {(user.role === "empleado" || user.role === "seguridad" || user.role === "administrador") && user.departamento && (
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="bg-[#f48a32] text-white text-xs px-3 py-1 rounded-full font-['DM_Serif_Text',serif]">
@@ -107,6 +107,7 @@ export function HomePage() {
             <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[16px]">Acceso Rapido</p>
           </div>
 
+          {/* Fila 1: QR, Credencial, Escanear Acceso (todos los usuarios) */}
           <div className="grid grid-cols-3 gap-4">
             <button
               onClick={() => navigate("/qr")}
@@ -122,23 +123,22 @@ export function HomePage() {
               onClick={() => navigate("/credential")}
               className="flex flex-col items-center gap-2"
             >
-              <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center">
+              <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center active:shadow-[0_0_15px_rgba(255,116,0,0.5)]">
                 <CreditCard size={48} className="text-[#ec5b13]" />
               </div>
               <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[14px]">Credencial Virtual</p>
             </button>
 
-            {canScan && (
-              <button
-                onClick={() => navigate("/scan")}
-                className="flex flex-col items-center gap-2"
-              >
-                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <ScanLine size={48} className="text-[#ec5b13]" />
-                </div>
-                <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[14px]">Escanear</p>
-              </button>
-            )}
+            {/* ← NUEVO: disponible para todos */}
+            <button
+              onClick={() => navigate("/scan-access")}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center active:shadow-[0_0_15px_rgba(255,116,0,0.5)]">
+                <ScanLine size={48} className="text-[#ec5b13]" />
+              </div>
+              <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[14px]">Escanear Acceso</p>
+            </button>
           </div>
         </div>
 
@@ -187,6 +187,24 @@ export function HomePage() {
             </div>
           </div>
         )}
+
+        {/* Escanear QR de personas — solo admin y seguridad */}
+        {canScan && (
+          <div className="mt-6">
+            <div className="bg-white rounded-lg shadow-sm px-4 py-2 text-center mb-4">
+              <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[16px]">Verificación</p>
+            </div>
+            <button
+              onClick={() => navigate("/scan")}
+              className="w-full bg-white rounded-full shadow-lg py-3 active:opacity-80"
+            >
+              <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[20px] text-center flex items-center justify-center gap-2">
+                <ScanLine size={20} /> Escanear QR de Usuario
+              </p>
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );
