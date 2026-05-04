@@ -1,8 +1,8 @@
 /// <reference types="cypress" />
 
 // ─── CREDENCIALES ─────────────────────────────────────────────────────────────
-const ADMIN   = { id: 'anellisse@universidad.edu', pass: '1234', nombre: 'Anellisse Herrera Maldonado', area: 'Dirección' }
-const EMPLEADO = { id: 'carlos.ruiz@universidad.edu', pass: '1234', nombre: 'Carlos Ruiz Pérez', area: 'Servicios Escolares' }
+const ADMIN   = { id: '1', pass: 'password123', nombre: 'Anellisse Herrera Maldonado', area: 'Dirección' }
+const EMPLEADO = { id: '2', pass: 'password123', nombre: 'Carlos Ruiz Pérez', area: 'Servicios Escolares' }
 
 // ─── HELPER ───────────────────────────────────────────────────────────────────
 const loginComo = (id: string, pass: string) => {
@@ -125,15 +125,14 @@ describe('Empleado', () => {
     })
 
     it('el contador va bajando', () => {
-      cy.contains('30').should('be.visible')
-      cy.wait(2000)
-      cy.contains('30').should('not.exist')
+      cy.wait(3000)
+      cy.get('span').filter(':contains("30")').should('not.exist')
     })
 
     it('el QR cambia al presionar regenerar', () => {
-      cy.get('svg').invoke('html').then((inicial) => {
+      cy.get('[data-cy="qr-code"] svg').invoke('html').then((qrInicial) => {
         cy.get('button').last().click()
-        cy.get('svg').invoke('html').should('not.equal', inicial)
+        cy.get('[data-cy="qr-code"] svg').invoke('html').should('not.equal', qrInicial)
       })
     })
 

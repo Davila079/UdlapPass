@@ -40,32 +40,20 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-
-// 🔥 MAPA DE FOTOS PARA ESTUDIANTES (TUS 3 USERS)
 const studentPhotos: Record<string, string> = {
   "183604": user3,
   "183112": user6,
   "183913": user8,
 };
 
-
-// 🔥 FUNCIÓN PARA ASIGNAR FOTO
 const getUserPhoto = (id: string, role: string) => {
   const cleanId = String(id).trim();
-
-  // 👇 estudiantes con ID específico
-  if (role === "estudiante") {
-    return studentPhotos[cleanId] || user4;
-  }
-
-  // 👇 otros roles
+  if (role === "estudiante") return studentPhotos[cleanId] || user4;
   if (role === "administrador") return user5;
   if (role === "empleado") return user9;
   if (role === "seguridad") return user3;
-
   return user4;
 };
-
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
@@ -81,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) return false;
 
       const { user: u } = await response.json();
-
       const userId = String(u.id).trim();
 
       setUser({
@@ -89,12 +76,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: u.full_name,
         role: u.role,
         photo: getUserPhoto(userId, u.role),
+        // Campos de estudiante
         carrera: u.career,
         semestre: u.semester,
         beca: u.scholarship,
         residente: u.is_resident === 1,
         colegio: u.residence,
-        activo: u.is_enrolled === 1,
+        // Campos de empleado y administrador ← NUEVO
+        departamento: u.area,
+        // Estado
+        activo: u.is_enrolled === 1 || u.is_active === 1 || u.role === "administrador",
         activoDesde: new Date().getFullYear(),
       });
 
@@ -115,4 +106,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
-
