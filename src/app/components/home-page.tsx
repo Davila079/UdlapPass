@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "./auth-context";
 import { useNavigate } from "react-router";
-import { LogOut, QrCode, CreditCard, ScanLine, FileText, Search } from "lucide-react";
+import { LogOut, QrCode, CreditCard, ScanLine, FileText } from "lucide-react";
 
 export function HomePage() {
   const { user, logout } = useAuth();
@@ -16,7 +16,6 @@ export function HomePage() {
     administrador: "Administrador",
   }[user.role];
 
-  const canScan = user.role === "administrador" || user.role === "seguridad";
   const isAdmin = user.role === "administrador";
 
   return (
@@ -101,13 +100,12 @@ export function HomePage() {
           </div>
         )}
 
-        {/* Quick Access */}
+        {/* Quick Access — todos los usuarios */}
         <div className="mt-6">
           <div className="bg-white rounded-lg shadow-sm px-4 py-2 text-center mb-4">
             <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[16px]">Acceso Rapido</p>
           </div>
 
-          {/* Fila 1: QR, Credencial, Escanear Acceso (todos los usuarios) */}
           <div className="grid grid-cols-3 gap-4">
             <button
               onClick={() => navigate("/qr")}
@@ -129,7 +127,6 @@ export function HomePage() {
               <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[14px]">Credencial Virtual</p>
             </button>
 
-            {/* ← NUEVO: disponible para todos */}
             <button
               onClick={() => navigate("/scan-access")}
               className="flex flex-col items-center gap-2"
@@ -158,50 +155,14 @@ export function HomePage() {
                 </p>
               </button>
               <button
-                onClick={() => navigate("/identify")}
+                onClick={() => navigate("/admin-scan")}
                 className="flex-1 bg-white rounded-full shadow-lg py-3 active:opacity-80"
               >
                 <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[20px] text-center flex items-center justify-center gap-2">
-                  <Search size={20} /> Identificar
+                  <ScanLine size={20} /> Acceso Manual
                 </p>
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Security Section */}
-        {user.role === "seguridad" && (
-          <div className="mt-6">
-            <div className="bg-white rounded-lg shadow-sm px-4 py-2 text-center mb-4">
-              <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[16px]">Seguridad</p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => navigate("/identify")}
-                className="flex-1 bg-white rounded-full shadow-lg py-3 active:opacity-80"
-              >
-                <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[20px] text-center flex items-center justify-center gap-2">
-                  <Search size={20} /> Identificar
-                </p>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Escanear QR de personas — solo admin y seguridad */}
-        {canScan && (
-          <div className="mt-6">
-            <div className="bg-white rounded-lg shadow-sm px-4 py-2 text-center mb-4">
-              <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[16px]">Verificación</p>
-            </div>
-            <button
-              onClick={() => navigate("/scan")}
-              className="w-full bg-white rounded-full shadow-lg py-3 active:opacity-80"
-            >
-              <p className="font-['DM_Serif_Text',serif] text-[#ec5b13] text-[20px] text-center flex items-center justify-center gap-2">
-                <ScanLine size={20} /> Escanear QR de Usuario
-              </p>
-            </button>
           </div>
         )}
 
