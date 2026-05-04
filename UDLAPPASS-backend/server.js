@@ -27,7 +27,6 @@ db.connect((err) => {
 app.post('/login', async (req, res) => {
   const { id, password } = req.body;
 
-  // Primero buscamos el usuario y su rol
   db.query('SELECT * FROM users WHERE id = ?', [id], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Error en el servidor' });
     if (results.length === 0) return res.status(401).json({ error: 'Credenciales incorrectas' });
@@ -36,7 +35,6 @@ app.post('/login', async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    // Según el rol buscamos el perfil correspondiente
     let profileQuery = '';
     if (user.role === 'estudiante') {
       profileQuery = 'SELECT * FROM students WHERE user_id = ?';
@@ -95,6 +93,23 @@ app.get('/search', (req, res) => {
     res.json(results);
   });
 });
+
+// ── ÚLTIMO REGISTRO DE ACCESO (para determinar entrada/salida) ────────────
+app.get('/access-logs/last', (req, res) => {
+  const { user_id } = req.query;
+
+  db.query(
+    `SELECT type FROM access_logs 
+     WHERE user_id = ? 
+     ORDER BY created_at DESC LIMIT 1`,
+    [user_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: 'Error en el servidor' });
+      res.json({ last: results.length > 0 ? results[0].type : null });
+    }
+  );
+});
+
 // ── REGISTROS DE ACCESO ────────────────────────────
 app.get('/access-logs', (req, res) => {
   const sql = `
@@ -129,6 +144,7 @@ app.post('/access-logs', (req, res) => {
     }
   );
 });
+
 // ── INICIAR SERVIDOR ────────────────────────────────
 app.listen(3000, () => {
   console.log('Servidor corriendo en http://localhost:3000');

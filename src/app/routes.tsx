@@ -7,6 +7,7 @@ import { CredentialPage } from "./components/credential-page";
 import { ScanPage } from "./components/scan-page";
 import { ReportsPage } from "./components/reports-page";
 import { IdentifyPage } from "./components/identify-page";
+import { ScanAccessPage } from "./components/scan-access-page"; 
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
       { path: "qr", Component: QrPage },
       { path: "credential", Component: CredentialPage },
       { path: "scan", Component: ScanPage },
+      { path: "scan-access", Component: ScanAccessPage },       
       { path: "reports", Component: ReportsPage },
       { path: "identify", Component: IdentifyPage },
       { path: "*", element: <Navigate to="/" replace /> },

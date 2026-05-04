@@ -81,7 +81,11 @@ export function ReportsPage() {
           </button>
           <p className="font-['Lexend',sans-serif] font-bold text-[#ec5b13] text-[20px] tracking-[-0.5px]">Reportes</p>
         </div>
-        <button onClick={() => setShowFilters(!showFilters)} className="text-[#ec5b13]">
+        <button
+          data-cy="toggle-filters"
+          onClick={() => setShowFilters(!showFilters)}
+          className="text-[#ec5b13]"
+        >
           <Filter size={22} />
         </button>
       </div>
