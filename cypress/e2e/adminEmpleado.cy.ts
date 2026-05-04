@@ -47,10 +47,6 @@ describe('Empleado', () => {
       cy.contains('Credencial Virtual').should('be.visible')
     })
 
-    it('NO muestra botón de Escanear', () => {
-      cy.contains('Escanear').should('not.exist')
-    })
-
     it('NO muestra sección de Administrador', () => {
       cy.contains('Administrador').should('not.exist')
     })

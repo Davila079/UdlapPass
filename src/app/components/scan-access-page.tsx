@@ -33,33 +33,6 @@ export function ScanAccessPage() {
     } catch (_) {}
   };
 
-  const iniciarEscaneo = async () => {
-    setEstado("escaneando");
-    setResultado(null);
-    setMensajeError("");
-
-    try {
-      readerRef.current = new BrowserQRCodeReader();
-
-      const controls = await readerRef.current.decodeFromVideoDevice(
-        undefined,
-        videoRef.current!,
-        async (result, error) => {
-          if (result) {
-            detenerCamara();
-            await procesarQR(result.getText());
-          }
-        }
-      );
-
-      controlsRef.current = controls;
-    } catch (err) {
-      console.error("Error cámara:", err);
-      setEstado("error");
-      setMensajeError("No se pudo acceder a la cámara. Verifica permisos en tu navegador.");
-    }
-  };
-
   const procesarQR = async (texto: string) => {
     setEstado("procesando");
 
@@ -102,6 +75,33 @@ export function ScanAccessPage() {
     } catch (err) {
       setEstado("error");
       setMensajeError("Error al procesar el QR. Intenta de nuevo.");
+    }
+  };
+
+  const iniciarEscaneo = async () => {
+    setEstado("escaneando");
+    setResultado(null);
+    setMensajeError("");
+
+    try {
+      readerRef.current = new BrowserQRCodeReader();
+
+      const controls = await readerRef.current.decodeFromVideoDevice(
+        undefined,
+        videoRef.current!,
+        async (result: any, error: any) => {
+          if (result) {
+            detenerCamara();
+            await procesarQR(result.getText());
+          }
+        }
+      );
+
+      controlsRef.current = controls;
+    } catch (err) {
+      console.error("Error cámara:", err);
+      setEstado("error");
+      setMensajeError("No se pudo acceder a la cámara. Verifica permisos en tu navegador.");
     }
   };
 
@@ -151,7 +151,6 @@ export function ScanAccessPage() {
               muted
               playsInline
             />
-            {/* Marco de escaneo */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-48 h-48 border-2 border-[#ec5b13] rounded-lg" />
             </div>
@@ -180,6 +179,7 @@ export function ScanAccessPage() {
                 </p>
               </div>
               <button
+                data-cy="abrir-camara"
                 onClick={iniciarEscaneo}
                 className="w-full bg-[#ec5b13] text-white py-3 rounded-full font-['DM_Serif_Text',serif] text-[16px] active:opacity-80"
               >
@@ -201,7 +201,7 @@ export function ScanAccessPage() {
           {/* Éxito */}
           {estado === "exito" && resultado && (
             <div className="flex flex-col items-center gap-4">
-              <div className="bg-white rounded-2xl shadow-lg p-6 w-full text-center">
+              <div data-cy="resultado-exito" className="bg-white rounded-2xl shadow-lg p-6 w-full text-center">
                 <CheckCircle size={56} className="text-green-500 mx-auto mb-3" />
                 <p className="font-['DM_Serif_Text',serif] text-[22px] text-black">
                   {resultado.tipo === "entrada" ? "Entrada" : "Salida"} Registrada
@@ -220,6 +220,7 @@ export function ScanAccessPage() {
                 </div>
               </div>
               <button
+                data-cy="escanear-otro"
                 onClick={reintentar}
                 className="w-full bg-[#ec5b13] text-white py-3 rounded-full font-['DM_Serif_Text',serif] text-[16px] active:opacity-80"
               >
@@ -231,14 +232,15 @@ export function ScanAccessPage() {
           {/* Error */}
           {estado === "error" && (
             <div className="flex flex-col items-center gap-4">
-              <div className="bg-white rounded-2xl shadow-lg p-6 w-full text-center">
+              <div data-cy="resultado-error" className="bg-white rounded-2xl shadow-lg p-6 w-full text-center">
                 <XCircle size={56} className="text-red-500 mx-auto mb-3" />
                 <p className="font-['DM_Serif_Text',serif] text-[18px] text-black">Error</p>
-                <p className="font-['DM_Serif_Text',serif] text-[14px] text-[#737373] mt-2">
+                <p data-cy="error-msg-scan" className="font-['DM_Serif_Text',serif] text-[14px] text-[#737373] mt-2">
                   {mensajeError}
                 </p>
               </div>
               <button
+                data-cy="reintentar"
                 onClick={reintentar}
                 className="w-full bg-[#ec5b13] text-white py-3 rounded-full font-['DM_Serif_Text',serif] text-[16px] active:opacity-80"
               >
@@ -246,6 +248,13 @@ export function ScanAccessPage() {
               </button>
             </div>
           )}
+
+          {/* Botón oculto para Cypress — simula un escaneo sin cámara */}
+          <button
+            data-cy="simular-qr"
+            style={{ display: 'none' }}
+            onClick={() => procesarQR((window as any).__cypressQR || '{}')}
+          />
 
         </div>
       </div>

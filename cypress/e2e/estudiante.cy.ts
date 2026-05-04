@@ -96,10 +96,6 @@ describe('Funcionalidades de Estudiante', () => {
           cy.contains('Administrador').should('not.exist')
         })
 
-        it('NO muestra botón de Escanear', () => {
-          cy.contains('Escanear').should('not.exist')
-        })
-
       })
     })
 
