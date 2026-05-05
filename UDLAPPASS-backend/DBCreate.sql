@@ -1,14 +1,21 @@
-USE `infsoft_db`;
+-- Conectarse a la base de datos ingsoftdb antes de correr esto
+
+-- Eliminar tablas en orden correcto (por dependencias)
+DROP TABLE IF EXISTS access_logs;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS employees;
 DROP TABLE IF EXISTS administrators;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS access_logs;
+
+-- PostgreSQL no tiene ENUM inline, se crea como tipo
+CREATE TYPE user_role AS ENUM ('estudiante', 'empleado', 'administrador');
+CREATE TYPE access_type AS ENUM ('entrada', 'salida');
+
 CREATE TABLE users (
   id            INT PRIMARY KEY,
   email         VARCHAR(100) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role          ENUM('estudiante', 'empleado', 'administrador') NOT NULL
+  role          user_role NOT NULL
 );
 
 CREATE TABLE students (
@@ -37,43 +44,46 @@ CREATE TABLE administrators (
   area          VARCHAR(100) NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 CREATE TABLE access_logs (
-  id          INT PRIMARY KEY AUTO_INCREMENT,
+  id          SERIAL PRIMARY KEY,  -- AUTO_INCREMENT → SERIAL en PostgreSQL
   user_id     INT NOT NULL,
-  type        ENUM('entrada', 'salida') NOT NULL,
+  type        access_type NOT NULL,
   method      VARCHAR(50) NOT NULL,
   location    VARCHAR(100) NOT NULL,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Datos
 INSERT INTO users (id, email, password_hash, role) VALUES
-  (183112, 'david.medina@udlap.mx',   '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
-  (183913, 'elisa.mendoza@udlap.mx',  '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
-  (2, 'carlos.ruiz@udlap.mx',    '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'empleado'),
-  (1, 'anellisse@udlap.mx',          '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'administrador'),
-   (183604, 'mafer@udlap.mx',   '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante');
+  (183112, 'david.medina@udlap.mx',  '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
+  (183913, 'elisa.mendoza@udlap.mx', '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
+  (183604, 'mafer@udlap.mx',         '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'estudiante'),
+  (2,      'carlos.ruiz@udlap.mx',   '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'empleado'),
+  (1,      'anellisse@udlap.mx',     '$2b$10$bInRqxulgXLFv1t/UfknAuYKDk.IhAxjz.UqJ7AyairiN0ZI5n/96', 'administrador');
 
 INSERT INTO students (user_id, full_name, career, semester, scholarship, is_enrolled, is_resident, residence) VALUES
-  (183112, 'David Miguel Medina Raymundo', 'Ingeniería en Sistemas Computacionales', 5, 'Académica', TRUE, TRUE,  'Gaos'),
-  (183913, 'Elisa Mendoza Cárdenas',       'Historia del Arte y Curaduría',          4, 'Sin Beca',  TRUE, FALSE, NULL),
-  (183604, 'Maria Fernanda Morales Hernandez', 'Ingeniería en Sistemas Computacionales', 4, 'Académica', TRUE, FALSE,  NULL);
+  (183112, 'David Miguel Medina Raymundo',      'Ingeniería en Sistemas Computacionales', 5, 'Académica', TRUE, TRUE,  'Gaos'),
+  (183913, 'Elisa Mendoza Cárdenas',            'Historia del Arte y Curaduría',          4, 'Sin Beca',  TRUE, FALSE, NULL),
+  (183604, 'Maria Fernanda Morales Hernandez',  'Ingeniería en Sistemas Computacionales', 4, 'Académica', TRUE, FALSE, NULL);
 
 INSERT INTO employees (user_id, full_name, area, is_active) VALUES
   (2, 'Carlos Ruiz Pérez', 'Servicios Escolares', TRUE);
 
 INSERT INTO administrators (user_id, full_name, area) VALUES
   (1, 'Anellisse Herrera Maldonado', 'Dirección');
-  
+
 INSERT INTO access_logs (user_id, type, method, location, created_at) VALUES
-  (1,      'entrada',  'QR',         'Proveedores',  '2026-04-15 07:32:00'),
-  (1,      'salida',   'QR',         'Recta',  '2026-04-15 14:15:00'),
-  (2,      'entrada',  'Credencial', 'Recta',  '2026-04-15 06:45:00'),
-  (2,      'entrada',  'QR',         'Gaos',      '2026-04-15 06:00:00'),
-  (183112, 'entrada',  'Vehicular',  'Recta',  '2026-04-14 08:10:00'),
-  (2,      'salida',   'QR',         'Periferico',  '2026-04-14 17:30:00'),
-  (183112, 'entrada',  'QR',         'Proveedores',  '2026-04-13 09:00:00'),
-  (183112, 'salida',   'QR',         'Gaos',  '2026-04-13 13:45:00'),
-  (2,      'entrada',  'Credencial', 'Periferico',  '2026-04-13 07:00:00'),
-  (2,      'entrada',  'QR',         'Periferico',      '2026-04-13 06:00:00'),
-  (183913, 'entrada',  'QR',         'Recta',  '2026-04-12 07:50:00'),
-  (183913, 'salida',   'QR',         'Proveedores',  '2026-04-12 15:20:00');
+  (1,      'entrada', 'QR',         'Proveedores', '2026-04-15 07:32:00'),
+  (1,      'salida',  'QR',         'Recta',       '2026-04-15 14:15:00'),
+  (2,      'entrada', 'Credencial', 'Recta',       '2026-04-15 06:45:00'),
+  (2,      'entrada', 'QR',         'Gaos',        '2026-04-15 06:00:00'),
+  (183112, 'entrada', 'Vehicular',  'Recta',       '2026-04-14 08:10:00'),
+  (2,      'salida',  'QR',         'Periferico',  '2026-04-14 17:30:00'),
+  (183112, 'entrada', 'QR',         'Proveedores', '2026-04-13 09:00:00'),
+  (183112, 'salida',  'QR',         'Gaos',        '2026-04-13 13:45:00'),
+  (2,      'entrada', 'Credencial', 'Periferico',  '2026-04-13 07:00:00'),
+  (2,      'entrada', 'QR',         'Periferico',  '2026-04-13 06:00:00'),
+  (183913, 'entrada', 'QR',         'Recta',       '2026-04-12 07:50:00'),
+  (183913, 'salida',  'QR',         'Proveedores', '2026-04-12 15:20:00');
