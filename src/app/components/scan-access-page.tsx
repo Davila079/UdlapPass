@@ -47,12 +47,12 @@ export function ScanAccessPage() {
       const ubicacion: string = datos.location;
 
       const resLast = await fetch(
-        `http://localhost:3000/access-logs/last?user_id=${user!.id}`
+        `/access-logs/last?user_id=${user!.id}`
       );
       const { last } = await resLast.json();
       const tipo: "entrada" | "salida" = last === "entrada" ? "salida" : "entrada";
 
-      const resPost = await fetch("http://localhost:3000/access-logs", {
+      const resPost = await fetch("/access-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

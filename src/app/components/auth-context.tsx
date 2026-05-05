@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (id: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch("http://localhost:3000/login", {
+      const response = await fetch("/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, password }),
@@ -80,12 +80,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         carrera: u.career,
         semestre: u.semester,
         beca: u.scholarship,
-        residente: u.is_resident === 1,
+        residente: !!u.is_resident,
         colegio: u.residence,
         // Campos de empleado y administrador ← NUEVO
         departamento: u.area,
         // Estado
-        activo: u.is_enrolled === 1 || u.is_active === 1 || u.role === "administrador",
+        activo: !!u.is_enrolled || !!u.is_active || u.role === "administrador",
         activoDesde: new Date().getFullYear(),
       });
 
