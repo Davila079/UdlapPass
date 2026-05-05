@@ -1,6 +1,14 @@
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' });
+
+console.log('Variables cargadas:', {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD ? '***existe***' : 'UNDEFINED',
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
+});
 const express = require('express');
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 
@@ -8,11 +16,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const db = mysql.createConnection({
+const db = new Pool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 5432,
 });
 
 db.connect((err) => {
@@ -20,50 +29,53 @@ db.connect((err) => {
     console.error('Error conectando a la base de datos:', err);
     return;
   }
-  console.log('Conectado a MariaDB');
+  console.log('Conectado a PostgreSQL');
 });
 
 // ── LOGIN ──────────────────────────────────────────
 app.post('/login', async (req, res) => {
   const { id, password } = req.body;
 
-  db.query('SELECT * FROM users WHERE id = ?', [id], async (err, results) => {
-    if (err) return res.status(500).json({ error: 'Error en el servidor' });
-    if (results.length === 0) return res.status(401).json({ error: 'Credenciales incorrectas' });
+  try {
+    const userResult = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+    if (userResult.rows.length === 0)
+      return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    const user = results[0];
+    const user = userResult.rows[0];
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    if (!passwordMatch) return res.status(401).json({ error: 'Credenciales incorrectas' });
+    if (!passwordMatch)
+      return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     let profileQuery = '';
     if (user.role === 'estudiante') {
-      profileQuery = 'SELECT * FROM students WHERE user_id = ?';
+      profileQuery = 'SELECT * FROM students WHERE user_id = $1';
     } else if (user.role === 'empleado') {
-      profileQuery = 'SELECT * FROM employees WHERE user_id = ?';
+      profileQuery = 'SELECT * FROM employees WHERE user_id = $1';
     } else if (user.role === 'administrador') {
-      profileQuery = 'SELECT * FROM administrators WHERE user_id = ?';
+      profileQuery = 'SELECT * FROM administrators WHERE user_id = $1';
     }
 
-    db.query(profileQuery, [user.id], (err, profileResults) => {
-      if (err) return res.status(500).json({ error: 'Error obteniendo perfil' });
+    const profileResult = await db.query(profileQuery, [user.id]);
+    const profile = profileResult.rows[0];
 
-      const profile = profileResults[0];
-
-      res.json({
-        success: true,
-        user: {
-          id: user.id,
-          role: user.role,
-          email: user.email,
-          ...profile
-        }
-      });
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        role: user.role,
+        email: user.email,
+        ...profile
+      }
     });
-  });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
 });
 
 // ── BUSCAR USUARIOS ────────────────────────────────
-app.get('/search', (req, res) => {
+app.get('/search', async (req, res) => {
   const { query } = req.query;
   const term = `%${query}%`;
 
@@ -71,51 +83,56 @@ app.get('/search', (req, res) => {
     SELECT u.id, u.role, s.full_name, s.career, s.is_enrolled
     FROM users u
     JOIN students s ON s.user_id = u.id
-    WHERE s.full_name LIKE ? OR u.id LIKE ?
+    WHERE s.full_name ILIKE $1 OR CAST(u.id AS TEXT) ILIKE $2
 
     UNION
 
     SELECT u.id, u.role, e.full_name, e.area AS career, e.is_active AS is_enrolled
     FROM users u
     JOIN employees e ON e.user_id = u.id
-    WHERE e.full_name LIKE ? OR u.id LIKE ?
+    WHERE e.full_name ILIKE $3 OR CAST(u.id AS TEXT) ILIKE $4
 
     UNION
 
     SELECT u.id, u.role, a.full_name, a.area AS career, TRUE AS is_enrolled
     FROM users u
     JOIN administrators a ON a.user_id = u.id
-    WHERE a.full_name LIKE ? OR u.id LIKE ?
+    WHERE a.full_name ILIKE $5 OR CAST(u.id AS TEXT) ILIKE $6
   `;
 
-  db.query(sql, [term, term, term, term, term, term], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Error en el servidor' });
-    res.json(results);
-  });
+  try {
+    const result = await db.query(sql, [term, term, term, term, term, term]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
 });
 
-// ── ÚLTIMO REGISTRO DE ACCESO (para determinar entrada/salida) ────────────
-app.get('/access-logs/last', (req, res) => {
+// ── ÚLTIMO REGISTRO DE ACCESO ──────────────────────
+app.get('/access-logs/last', async (req, res) => {
   const { user_id } = req.query;
 
-  db.query(
-    `SELECT type FROM access_logs 
-     WHERE user_id = ? 
-     ORDER BY created_at DESC LIMIT 1`,
-    [user_id],
-    (err, results) => {
-      if (err) return res.status(500).json({ error: 'Error en el servidor' });
-      res.json({ last: results.length > 0 ? results[0].type : null });
-    }
-  );
+  try {
+    const result = await db.query(
+      `SELECT type FROM access_logs 
+       WHERE user_id = $1 
+       ORDER BY created_at DESC LIMIT 1`,
+      [user_id]
+    );
+    res.json({ last: result.rows.length > 0 ? result.rows[0].type : null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
 });
 
 // ── REGISTROS DE ACCESO ────────────────────────────
-app.get('/access-logs', (req, res) => {
+app.get('/access-logs', async (req, res) => {
   const sql = `
     SELECT 
       a.id, a.type, a.method, a.location, a.created_at,
-      u.id AS userId, u.role,
+      u.id AS "userId", u.role,
       COALESCE(s.full_name, e.full_name, ad.full_name) AS name
     FROM access_logs a
     JOIN users u ON u.id = a.user_id
@@ -125,24 +142,29 @@ app.get('/access-logs', (req, res) => {
     ORDER BY a.created_at DESC
   `;
 
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Error en el servidor' });
-    res.json(results);
-  });
+  try {
+    const result = await db.query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
 });
 
 // ── INSERTAR REGISTRO ──────────────────────────────
-app.post('/access-logs', (req, res) => {
+app.post('/access-logs', async (req, res) => {
   const { user_id, type, method, location } = req.body;
 
-  db.query(
-    'INSERT INTO access_logs (user_id, type, method, location) VALUES (?, ?, ?, ?)',
-    [user_id, type, method, location],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: 'Error guardando registro' });
-      res.json({ success: true, id: result.insertId });
-    }
-  );
+  try {
+    const result = await db.query(
+      'INSERT INTO access_logs (user_id, type, method, location) VALUES ($1, $2, $3, $4) RETURNING id',
+      [user_id, type, method, location]
+    );
+    res.json({ success: true, id: result.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error guardando registro' });
+  }
 });
 
 // ── INICIAR SERVIDOR ────────────────────────────────
