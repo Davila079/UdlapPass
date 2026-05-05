@@ -16,7 +16,7 @@ describe('Autenticación', () => {
   it('Login rechaza contraseña incorrecta', () => {
     cy.visit('/')
     cy.get('[data-cy="usuario"]').type('183112')
-    cy.get('[data-cy="password"]').type('WrongPass!')
+    cy.get('[data-cy="password"]').type('WrongPass')
     cy.get('[data-cy="submit"]').click()
     cy.get('[data-cy="error-msg"]')
       .should('be.visible')
