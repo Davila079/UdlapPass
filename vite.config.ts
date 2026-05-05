@@ -36,9 +36,7 @@ export default defineConfig({
 
   server: {
     proxy: {
-      '/login': 'http://localhost:3000',
-      '/search': 'http://localhost:3000',
-      '/access-logs': 'http://localhost:3000',
+      '/api': 'http://localhost:3000',
     },
   },
 })
