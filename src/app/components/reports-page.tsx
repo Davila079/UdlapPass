@@ -25,7 +25,7 @@ export function ReportsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    fetch("/access-logs")
+    fetch("/api/access-logs")
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((log: any) => {

@@ -91,7 +91,7 @@ export function AdminScanPage() {
     setEstado("procesando");
 
     try {
-      const res = await fetch("/access-logs", {
+      const res = await fetch("/api/access-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
