@@ -6,17 +6,32 @@ export function LoginPage() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const success = await login(userId, password);
-    if (success) {
-      navigate("/home");
-    } else {
-      setError("ID o contraseña incorrectos");
+
+    const trimmedId = userId.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedId || !trimmedPassword) {
+      setError("Por favor ingresa tu ID y contraseña");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const success = await login(trimmedId, trimmedPassword);
+      if (success) {
+        navigate("/home");
+      } else {
+        setError("ID o contraseña incorrectos");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,7 +56,8 @@ export function LoginPage() {
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
             placeholder="ID Estudiante"
-            className="w-full h-[50px] bg-white px-4 font-['DM_Serif_Text',serif] text-[15px] text-black placeholder-[#737373] outline-none"
+            disabled={loading}
+            className="w-full h-[50px] bg-white px-4 font-['DM_Serif_Text',serif] text-[15px] text-black placeholder-[#737373] outline-none disabled:opacity-60"
           />
         </div>
 
@@ -55,7 +71,8 @@ export function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="*********"
-            className="w-full h-[50px] bg-white px-4 font-['DM_Serif_Text',serif] text-[15px] text-black placeholder-[#737373] outline-none"
+            disabled={loading}
+            className="w-full h-[50px] bg-white px-4 font-['DM_Serif_Text',serif] text-[15px] text-black placeholder-[#737373] outline-none disabled:opacity-60"
           />
         </div>
 
@@ -72,9 +89,36 @@ export function LoginPage() {
         <button
           data-cy="submit"
           type="submit"
-          className="w-full h-[50px] bg-[#f48a32] rounded-lg font-['DM_Serif_Text',serif] text-[18px] text-white mt-4 active:opacity-80"
+          disabled={loading}
+          className="w-full h-[50px] bg-[#f48a32] rounded-lg font-['DM_Serif_Text',serif] text-[18px] text-white mt-4 active:opacity-80 disabled:opacity-70 flex items-center justify-center gap-2"
         >
-          Ingresar
+          {loading ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                />
+              </svg>
+              Ingresando...
+            </>
+          ) : (
+            "Ingresar"
+          )}
         </button>
 
         <p className="text-center text-[#737373] text-xs mt-4">

@@ -22,8 +22,12 @@ export default async function handler(req, res) {
     else if (user.role === 'empleado') profileQuery = 'SELECT * FROM employees WHERE user_id = $1';
     else if (user.role === 'administrador') profileQuery = 'SELECT * FROM administrators WHERE user_id = $1';
 
-    const profileResult = await db.query(profileQuery, [user.id]);
-    const profile = profileResult.rows[0];
+    let profile = {};
+    if (profileQuery) {
+      const profileResult = await db.query(profileQuery, [user.id]);
+      profile = profileResult.rows[0];
+      if (!profile) return res.status(500).json({ error: 'Perfil no encontrado' });
+    }
 
     res.json({
       success: true,

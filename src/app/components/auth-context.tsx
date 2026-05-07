@@ -28,6 +28,24 @@ export interface UserData {
   activoDesde: number;
 }
 
+// Forma serializable (sin módulos de imagen importados)
+interface StoredSession {
+  id: string;
+  name: string;
+  role: UserRole;
+  carrera?: string;
+  semestre?: number;
+  beca?: string;
+  residente?: boolean;
+  colegio?: string;
+  departamento?: string;
+  puesto?: string;
+  activo: boolean;
+  activoDesde: number;
+}
+
+const SESSION_KEY = "udlappass_session";
+
 interface AuthContextType {
   user: UserData | null;
   login: (id: string, password: string) => Promise<boolean>;
@@ -56,7 +74,19 @@ const getUserPhoto = (id: string, role: string) => {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserData | null>(null);
+  // Lazy initializer síncrono: restaura la sesión antes del primer render
+  // evitando el flash de redirect en rutas protegidas al recargar la página
+  const [user, setUser] = useState<UserData | null>(() => {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const stored: StoredSession = JSON.parse(raw);
+      return { ...stored, photo: getUserPhoto(stored.id, stored.role) };
+    } catch {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+  });
 
   const login = async (id: string, password: string): Promise<boolean> => {
     try {
@@ -71,22 +101,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { user: u } = await response.json();
       const userId = String(u.id).trim();
 
-      setUser({
+      const session: StoredSession = {
         id: userId,
         name: u.full_name,
         role: u.role,
-        photo: getUserPhoto(userId, u.role),
-        // Campos de estudiante
         carrera: u.career,
         semestre: u.semester,
         beca: u.scholarship,
         residente: !!u.is_resident,
         colegio: u.residence,
-        // Campos de empleado y administrador ← NUEVO
         departamento: u.area,
-        // Estado
         activo: !!u.is_enrolled || !!u.is_active || u.role === "administrador",
         activoDesde: new Date().getFullYear(),
+      };
+
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+      setUser({
+        ...session,
+        photo: getUserPhoto(userId, u.role),
       });
 
       return true;
@@ -96,7 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    localStorage.removeItem(SESSION_KEY);
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
